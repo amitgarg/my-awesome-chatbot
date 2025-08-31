@@ -9,6 +9,7 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -168,3 +169,40 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+export const tag = pgTable(
+  'Tag',
+  {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    name: varchar('name', { length: 64 }).notNull(),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+    createdBy: uuid('createdBy')
+      .notNull()
+      .references(() => user.id),
+  },
+  (table) => ({
+    uniqueUserTag: uniqueIndex('unique_user_tag').on(
+      table.name,
+      table.createdBy,
+    ),
+  }),
+);
+
+export type Tag = InferSelectModel<typeof tag>;
+
+export const chatTag = pgTable(
+  'ChatTag',
+  {
+    chatId: uuid('chatId')
+      .notNull()
+      .references(() => chat.id),
+    tagId: uuid('tagId')
+      .notNull()
+      .references(() => tag.id),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.chatId, table.tagId] }),
+  }),
+);
+
+export type ChatTag = InferSelectModel<typeof chatTag>;

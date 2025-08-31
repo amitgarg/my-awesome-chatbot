@@ -27,6 +27,8 @@ import {
   type DBMessage,
   type Chat,
   stream,
+  tag,
+  chatTag,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
 import { generateUUID } from '../utils';
@@ -40,7 +42,7 @@ import { ChatSDKError } from '../errors';
 
 // biome-ignore lint: Forbidden non-null assertion.
 const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+export const db = drizzle(client);
 
 export async function getUser(email: string): Promise<Array<User>> {
   try {
@@ -533,6 +535,275 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to get stream ids by chat id',
+    );
+  }
+}
+
+// Tag-related queries
+export async function getAllChatTags({ userId }: { userId: string }) {
+  try {
+    const chatTags = await db
+      .select({
+        chatId: chatTag.chatId,
+        tagId: tag.id,
+        tagName: tag.name,
+      })
+      .from(chatTag)
+      .innerJoin(tag, eq(chatTag.tagId, tag.id))
+      .innerJoin(chat, eq(chatTag.chatId, chat.id))
+      .where(eq(chat.userId, userId));
+
+    return chatTags;
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get all chat tags',
+    );
+  }
+}
+
+export async function getTagsByChatId({ chatId }: { chatId: string }) {
+  try {
+    const tags = await db
+      .select({ id: tag.id, name: tag.name })
+      .from(chatTag)
+      .innerJoin(tag, eq(chatTag.tagId, tag.id))
+      .where(eq(chatTag.chatId, chatId));
+
+    return tags;
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get tags by chat id',
+    );
+  }
+}
+
+export async function getChatsByTagId({ tagId }: { tagId: string }) {
+  try {
+    const chats = await db
+      .select({ id: chat.id, title: chat.title })
+      .from(chatTag)
+      .innerJoin(chat, eq(chatTag.chatId, chat.id))
+      .where(eq(chatTag.tagId, tagId));
+
+    return chats;
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get chats by tag id',
+    );
+  }
+}
+
+export async function addTagToChat({
+  chatId,
+  tagId,
+}: { chatId: string; tagId: string }) {
+  try {
+    const [created] = await db
+      .insert(chatTag)
+      .values({ chatId, tagId })
+      .onConflictDoNothing()
+      .returning();
+
+    return created;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to add tag to chat');
+  }
+}
+
+export async function removeTagFromChat({
+  chatId,
+  tagId,
+}: { chatId: string; tagId: string }) {
+  try {
+    await db
+      .delete(chatTag)
+      .where(and(eq(chatTag.chatId, chatId), eq(chatTag.tagId, tagId)));
+
+    return { success: true };
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to remove tag from chat',
+    );
+  }
+}
+
+// Tag management queries
+export async function createTag({
+  name,
+  createdBy,
+}: { name: string; createdBy: string }) {
+  try {
+    const [created] = await db
+      .insert(tag)
+      .values({ name, createdBy })
+      .onConflictDoNothing()
+      .returning();
+
+    if (!created) {
+      // Tag already exists for this user, return the existing tag
+      const existingTag = await getTagByNameAndUser({ name, createdBy });
+      if (existingTag) {
+        return existingTag;
+      }
+      throw new ChatSDKError(
+        'bad_request:database',
+        'Failed to create tag - tag already exists for this user',
+      );
+    }
+
+    return created;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to create tag');
+  }
+}
+
+export async function updateTag({ id, name }: { id: string; name?: string }) {
+  try {
+    const updateData: { name?: string } = {};
+    if (name !== undefined) updateData.name = name;
+
+    const [updated] = await db
+      .update(tag)
+      .set(updateData)
+      .where(eq(tag.id, id))
+      .returning();
+
+    return updated;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to update tag');
+  }
+}
+
+export async function deleteTag({ id }: { id: string }) {
+  try {
+    // First remove all chat associations
+    await db.delete(chatTag).where(eq(chatTag.tagId, id));
+
+    // Then delete the tag
+    const [deleted] = await db.delete(tag).where(eq(tag.id, id)).returning();
+
+    return deleted;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to delete tag');
+  }
+}
+
+export async function getAllTags() {
+  try {
+    const tags = await db.select().from(tag).orderBy(asc(tag.name));
+
+    return tags;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to get all tags');
+  }
+}
+
+export async function getTagById({ id }: { id: string }) {
+  try {
+    const [tagData] = await db.select().from(tag).where(eq(tag.id, id));
+
+    return tagData;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to get tag by id');
+  }
+}
+
+export async function getTagByName({ name }: { name: string }) {
+  try {
+    const [tagData] = await db.select().from(tag).where(eq(tag.name, name));
+
+    return tagData;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to get tag by name');
+  }
+}
+
+export async function getTagByNameAndUser({
+  name,
+  createdBy,
+}: { name: string; createdBy: string }) {
+  try {
+    const [tagData] = await db
+      .select()
+      .from(tag)
+      .where(and(eq(tag.name, name), eq(tag.createdBy, createdBy)));
+
+    return tagData;
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get tag by name and user',
+    );
+  }
+}
+
+export async function getTagsByUser({ userId }: { userId: string }) {
+  try {
+    const userTags = await db
+      .select({
+        id: tag.id,
+        name: tag.name,
+        createdAt: tag.createdAt,
+      })
+      .from(tag)
+      .where(eq(tag.createdBy, userId))
+      .orderBy(asc(tag.name));
+
+    return userTags;
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get tags by user',
+    );
+  }
+}
+
+// Get all tags that are currently assigned to chats
+export async function getActiveTags() {
+  try {
+    const activeTags = await db
+      .select({
+        id: tag.id,
+        name: tag.name,
+        createdAt: tag.createdAt,
+        createdBy: tag.createdBy,
+      })
+      .from(tag)
+      .innerJoin(chatTag, eq(tag.id, chatTag.tagId))
+      .groupBy(tag.id, tag.name, tag.createdAt, tag.createdBy)
+      .orderBy(asc(tag.name));
+
+    return activeTags;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to get active tags');
+  }
+}
+
+// Get tags with their usage count (how many chats they're assigned to)
+export async function getTagsWithUsageCount() {
+  try {
+    const tagsWithCount = await db
+      .select({
+        id: tag.id,
+        name: tag.name,
+        createdAt: tag.createdAt,
+        createdBy: tag.createdBy,
+        usageCount: count(chatTag.chatId),
+      })
+      .from(tag)
+      .leftJoin(chatTag, eq(tag.id, chatTag.tagId))
+      .groupBy(tag.id, tag.name, tag.createdAt, tag.createdBy)
+      .orderBy(asc(tag.name));
+
+    return tagsWithCount;
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get tags with usage count',
     );
   }
 }
