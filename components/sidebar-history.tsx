@@ -3,19 +3,7 @@
 import { isToday, isYesterday, subMonths, subWeeks } from 'date-fns';
 import { useParams, useRouter } from 'next/navigation';
 import type { User } from 'next-auth';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -27,6 +15,7 @@ import { fetcher } from '@/lib/utils';
 import { ChatItem } from './sidebar-history-item';
 import useSWRInfinite from 'swr/infinite';
 import { LoaderIcon } from './icons';
+import { useDeleteChat } from '@/hooks/use-delete-chat';
 
 type GroupedChats = {
   today: Chat[];
@@ -152,8 +141,24 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   });
 
   const router = useRouter();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  const handleDeleteSuccess = () => {
+    mutate((chatHistories) => {
+      if (chatHistories) {
+        return chatHistories.map((chatHistory) => ({
+          ...chatHistory,
+          chats: chatHistory.chats.filter((chat) => chat.id !== deleteId),
+        }));
+      }
+    });
+
+    // Navigate away if we deleted the current chat
+    if (deleteId === (Array.isArray(id) ? id[0] : id)) {
+      router.push('/');
+    }
+  };
+
+  const { deleteId, openDeleteDialog, DeleteDialog } = useDeleteChat(handleDeleteSuccess);
 
   const hasReachedEnd = paginatedChatHistories
     ? paginatedChatHistories.some((page) => page.hasMore === false)
@@ -162,35 +167,6 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   const hasEmptyChatHistory = paginatedChatHistories
     ? paginatedChatHistories.every((page) => page.chats.length === 0)
     : false;
-
-  const handleDelete = async () => {
-    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
-      method: 'DELETE',
-    });
-
-    toast.promise(deletePromise, {
-      loading: 'Deleting chat...',
-      success: () => {
-        mutate((chatHistories) => {
-          if (chatHistories) {
-            return chatHistories.map((chatHistory) => ({
-              ...chatHistory,
-              chats: chatHistory.chats.filter((chat) => chat.id !== deleteId),
-            }));
-          }
-        });
-
-        return 'Chat deleted successfully';
-      },
-      error: 'Failed to delete chat',
-    });
-
-    setShowDeleteDialog(false);
-
-    if (deleteId === id) {
-      router.push('/');
-    }
-  };
 
   if (!user) {
     return (
@@ -262,10 +238,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                   <GroupedChatsList
                     groupedChats={groupedChats}
                     currentChatId={Array.isArray(id) ? id[0] : id}
-                    onDelete={(chatId) => {
-                      setDeleteId(chatId);
-                      setShowDeleteDialog(true);
-                    }}
+                    onDelete={openDeleteDialog}
                     setOpenMobile={setOpenMobile}
                   />
                 );
@@ -295,23 +268,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
         </SidebarGroupContent>
       </SidebarGroup>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              chat and remove it from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteDialog />
     </>
   );
 }
