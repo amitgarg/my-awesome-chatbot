@@ -28,6 +28,7 @@ import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { ChatTagDropdown as ChatTagDropdownMenu } from "./tags/chat-tag-dropdown";
 import { Tag } from "@/app/(chat)/types";
 import { Badge } from "./ui/badge";
+import { useFeatureFlag } from "@/hooks/use-feature-flags";
 
 const PureChatItem = ({
   chat,
@@ -49,11 +50,13 @@ const PureChatItem = ({
     initialVisibilityType: chat.visibility,
   });
 
+  const enableChatTags = useFeatureFlag("enableChatTags");
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
         <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-          <ChatLabel chat={chat} tags={tags} showTags={true} />
+          <ChatLabel chat={chat} tags={tags} showTags={enableChatTags} />
         </Link>
       </SidebarMenuButton>
 
@@ -114,11 +117,13 @@ const PureChatItem = ({
             <span>Delete</span>
           </DropdownMenuItem>
 
-          <ChatTagDropdownMenu
-            chatId={chat.id}
-            tags={tags}
-            onTagsUpdate={onTagsUpdate}
-          />
+          {enableChatTags && (
+            <ChatTagDropdownMenu
+              chatId={chat.id}
+              tags={tags}
+              onTagsUpdate={onTagsUpdate}
+            />
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>

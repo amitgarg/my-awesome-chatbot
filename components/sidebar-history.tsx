@@ -20,6 +20,7 @@ import { useState } from "react";
 import TagManager from "./tags/tag-manager";
 import useSWR from "swr";
 import { Tag } from "@/app/(chat)/types";
+import { useFeatureFlag } from "@/hooks/use-feature-flags";
 
 type GroupedChats = {
   today: Chat[];
@@ -88,6 +89,7 @@ export function getChatHistoryPaginationKey(
 
 export function SidebarHistory({ user }: { user: User | undefined }) {
   const { setOpenMobile } = useSidebar();
+  const enableChatTags = useFeatureFlag("enableChatTags");
   const { id } = useParams();
 
   const {
@@ -103,7 +105,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   // Fetch all chat tags in a single call
   const { data: allChatTags, mutate: mutateChatTags } = useSWR<
     Record<string, Array<Tag>>
-  >(user ? "/api/chat-tag?all=true" : null, fetcher, {
+  >(user && enableChatTags ? "/api/chat-tag?all=true" : null, fetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
     dedupingInterval: 300000, // Cache for 5 minutes
@@ -207,18 +209,19 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 
   return (
     <>
-      <TagManager
-        selectedTags={selectedTags}
-        setSelectedTags={setSelectedTags}
-        user={user?.id ? { id: user.id } : null}
-        onTagsDeleted={() => {
-          // Force refetch chat tags to get updated data
-          mutateChatTags();
-        }}
-      />
+      {enableChatTags && (
+        <TagManager
+          selectedTags={selectedTags}
+          setSelectedTags={setSelectedTags}
+          user={user?.id ? { id: user.id } : null}
+          onTagsDeleted={() => {
+            // Force refetch chat tags to get updated data
+            mutateChatTags();
+          }}
+        />
+      )}
 
-      {/* Tag Filter Results Summary */}
-      {selectedTags.length > 0 && (
+      {enableChatTags && selectedTags.length > 0 && (
         <div className="px-2 py-1">
           <div className="text-xs text-sidebar-foreground/50 flex items-center gap-2">
             <span>
