@@ -1,3 +1,79 @@
+# Assignment
+- fork the [Vercel AI Chatbot](https://github.com/vercel/ai-chatbot) and add a feature you like
+## Feature
+### What?
+> **Chat search and management using tags**
+### why?
+> Managing and retrieving conversations efficiently is crucial in any chat-based application, particularly as users accumulate a large number of threads over time. The chat tagging feature enables users to create, assign, and manage custom tags for their chat threads. This empowers users to categorize, organize, and quickly filter conversations by context or topic, greatly enhancing both productivity and user experience. 
+  
+> Specially for AI chatbots where users use them for research, having better management of threads encourage them to create separate threads for each topic, which keeps the context within the threads minimum yet concise, leading to more refined results from models and keeping the tokens exchanges low reducing the cost for end users.
+
+### Requirements
+#### Functional Requirements
+- [x] User can create new tags with custom names.
+- [x] Tag names must be unique for a user but can be duplicate across users.
+- [ ] User can modify name of existing tags
+- [x] User can delete existing tags
+- [x] Multiple tags can be associated and disassociated with any chat thread.
+- [x] Chats can be viewed and filtered based on assigned tags in the sidebar. User can select multiple tags. The filtering is applied based on matching any of tags criteria.
+- [x] Tags are visibly displayed alongside chat threads in the UI.
+- [x] Tag assignment persists across browser sessions and across devices
+#### Non Functional Requirements
+- User Facing
+  - Performance
+    - [ ] User will load chat threads only specific to selected tags
+    - [x] Use caching for static/non dynamic data
+    - [ ] Asset optimization
+    - [ ] prefetching tags
+  - Accessibility
+    - [ ] User should be able to navigate entire tag managemenet flow with keyboard 
+      - [x] create tag
+      - [x] select tags for filtering
+      - [ ] delete tags
+      - [ ] Associate threads with tags	
+  - Responsive UI
+    - [ ] should work well with mobile devices
+  - Localization & Internationalization
+    - [ ] have language speicific labels and rendering direction
+- Business Facing
+  - A/B Testing
+    - [ ] deploy behind feature flags for deployment control
+  - Privacy
+    - [x] Others users can't access tags created by a user
+  - Security
+    - [ ] User should not be able to inject sql or script with text inputs
+      - [ ] sanitize the tag name before creation
+      - [x] tag filtering query is only local search 
+  - Authentication and Authurization
+    - [x] tag management and association apis to be called with user session details
+    - [ ] services to impliment authorization
+  - User BI Telemetry
+    - [ ] Capture user actions like creat, delete and associate tags and filtering based on tags
+    - [ ] Create dashboards for capturing the following usage metrics for feature
+      - [ ] tags created
+      - [ ] associate tag with chat
+      - [ ] selecting tag for filtering
+      - [ ] enable/disable tags feature in settings page
+- Engineering
+  - Logging
+    - [x] Have error logging in place with detailed error for error cases
+  - Monitoring
+    - [ ] Setup monitoring of scenario telemetry data for tag management and association flows
+    - [ ] Setup web vitals monitoring for performance dashboards
+    - [ ] Create Dashboard for monitoring the metrics
+  - Testing
+    - [ ] Have unit test coverage 
+    - [ ] have automation test cases for regression testing
+  - Deployment
+    - [x] release feature behind a feature flag
+    - [ ] should be able to quickly stop the feature for selected users
+    - [ ] have the experiments control the feature flag enablement
+    - [ ] strategically deploy to incrementally larger groups (Rings or environments)
+  - Quality Assurance
+    - [ ] Setup jira dashboard for tracking bugs
+  
+
+
 ### The code flow diagram for the tag management flow
 ```mermaid
 ---
