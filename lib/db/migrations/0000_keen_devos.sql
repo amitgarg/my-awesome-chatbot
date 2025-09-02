@@ -16,3 +16,20 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+
+CREATE TABLE IF NOT EXISTS "Tag" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar(64) NOT NULL UNIQUE,
+	"createdAt" timestamp NOT NULL DEFAULT now(),
+	"createdBy" uuid NOT NULL,
+	CONSTRAINT "Tag_createdBy_User_id_fk" FOREIGN KEY ("createdBy") REFERENCES "User"("id") ON DELETE CASCADE
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "ChatTag" (
+	"chatId" uuid NOT NULL,
+	"tagId" uuid NOT NULL,
+	PRIMARY KEY ("chatId", "tagId"),
+	CONSTRAINT "ChatTag_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "Chat"("id") ON DELETE CASCADE,
+	CONSTRAINT "ChatTag_tagId_Tag_id_fk" FOREIGN KEY ("tagId") REFERENCES "Tag"("id") ON DELETE CASCADE
+);
+--> statement-breakpoint

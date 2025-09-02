@@ -1,62 +1,197 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Chat SDK</h1>
-</a>
+# Assignment
+- fork the [Vercel AI Chatbot](https://github.com/vercel/ai-chatbot) and add a feature you like
+## Feature
+### What?
+> **Chat search and management using tags**
+### why?
+> Managing and retrieving conversations efficiently is crucial in any chat-based application, particularly as users accumulate a large number of threads over time. The chat tagging feature enables users to create, assign, and manage custom tags for their chat threads. This empowers users to categorize, organize, and quickly filter conversations by context or topic, greatly enhancing both productivity and user experience. 
+  
+> Specially for AI chatbots where users use them for research, having better management of threads encourage them to create separate threads for each topic, which keeps the context within the threads minimum yet concise, leading to more refined results from models and keeping the tokens exchanges low reducing the cost for end users.
 
-<p align="center">
-    Chat SDK is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
-</p>
+### Requirements
+#### Functional Requirements
+- [x] User can create new tags with custom names.
+- [x] Tag names must be unique for a user but can be duplicate across users.
+- [ ] User can modify name of existing tags
+- [x] User can delete existing tags
+- [x] Multiple tags can be associated and disassociated with any chat thread.
+- [x] Chats can be viewed and filtered based on assigned tags in the sidebar. User can select multiple tags. The filtering is applied based on matching any of tags criteria.
+- [x] Tags are visibly displayed alongside chat threads in the UI.
+- [x] Tag assignment persists across browser sessions and across devices
+#### Non Functional Requirements
+- User Facing
+  - Performance
+    - [ ] User will load chat threads only specific to selected tags
+    - [x] Use caching for static/non dynamic data
+    - [ ] Asset optimization
+    - [ ] prefetching tags
+  - Accessibility
+    - [ ] User should be able to navigate entire tag managemenet flow with keyboard 
+      - [x] create tag
+      - [x] select tags for filtering
+      - [ ] delete tags
+      - [ ] Associate threads with tags	
+  - Responsive UI
+    - [ ] should work well with mobile devices
+  - Localization & Internationalization
+    - [ ] have language speicific labels and rendering direction
+- Business Facing
+  - A/B Testing
+    - [ ] deploy behind feature flags for deployment control
+  - Privacy
+    - [x] Others users can't access tags created by a user
+  - Security
+    - [ ] User should not be able to inject sql or script with text inputs
+      - [ ] sanitize the tag name before creation
+      - [x] tag filtering query is only local search 
+  - Authentication and Authurization
+    - [x] tag management and association apis to be called with user session details
+    - [ ] services to impliment authorization
+  - User BI Telemetry
+    - [ ] Capture user actions like creat, delete and associate tags and filtering based on tags
+    - [ ] Create dashboards for capturing the following usage metrics for feature
+      - [ ] tags created
+      - [ ] associate tag with chat
+      - [ ] selecting tag for filtering
+      - [ ] enable/disable tags feature in settings page
+- Engineering
+  - Logging
+    - [x] Have error logging in place with detailed error for error cases
+  - Monitoring
+    - [ ] Setup monitoring of scenario telemetry data for tag management and association flows
+    - [ ] Setup web vitals monitoring for performance dashboards
+    - [ ] Create Dashboard for monitoring the metrics
+  - Testing
+    - [ ] Have unit test coverage 
+    - [ ] have automation test cases for regression testing
+  - Deployment
+    - [x] release feature behind a feature flag
+    - [ ] should be able to quickly stop the feature for selected users
+    - [ ] have the experiments control the feature flag enablement
+    - [ ] strategically deploy to incrementally larger groups (Rings or environments)
+  - Quality Assurance
+    - [ ] Setup jira dashboard for tracking bugs
+  
+#### Development
+- refactoring of code to prepare for changes, show the commit history
+- design interface between server and ui
+- design db schema and api endpoints
+- impliment queries utils to be used by api enpoints
+- impliment api endpoints
+- build components keeping reusability in mind
 
-<p align="center">
-  <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
-</p>
-<br/>
+#### Challenges
+- Next.js
+- tailwind css
+- lacked the support for a design system
+- some components provided by other libraries were not available (eg: multiselect)
+- implimenting APIs (used cursor for that)
+- deploying to vercel and configuration
 
-## Features
-
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://sdk.vercel.ai/docs)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports xAI (default), OpenAI, Fireworks, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
-
-## Model Providers
-
-This template ships with [xAI](https://x.ai) `grok-2-1212` as the default chat model. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
-
-## Deploy Your Own
-
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=AUTH_SECRET&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&demo-title=AI+Chatbot&demo-description=An+Open-Source+AI+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&demo-url=https%3A%2F%2Fchat.vercel.ai&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22ai%22%2C%22productSlug%22%3A%22grok%22%2C%22integrationSlug%22%3A%22xai%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22upstash-kv%22%2C%22integrationSlug%22%3A%22upstash%22%7D%2C%7B%22type%22%3A%22blob%22%7D%5D)
-
-## Running locally
-
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
-
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
-
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
-
-```bash
-pnpm install
-pnpm dev
+### The code flow diagram for the tag management flow
+```mermaid
+---
+title: "Entire Tag Management Flow"
+config:
+  themeVariables: 
+    actorLineColor: "#000000"
+    noteBkgColor: "#FFFFFF"
+    noteBorderColor: "#FFFFFF"
+  sequence:
+    actorMargin: -75
+---
+	sequenceDiagram
+		create participant main as main<br/>main
+		Note over main: START (0)
+		Note over main: .
+		create participant L117 as app<br/>layout.tsx
+		main -->> L117: 
+		Note over L117: top most layout rendering html and body tags (73)
+		Note over L117: FeatureFlagProvider injects the feature flags in context (82)
+		Note over L117: .
+		create participant UFF as hooks<br/>use-feature-flags.tsx
+		L117 -->> UFF: 
+		Note over UFF: provider sets the value of flags from the url (21)
+		Note over UFF: .
+		create participant L115 as app/(chat)<br/>layout.tsx
+		UFF -->> L115: 
+		Note over L115: chat route renders layout for chat (10)
+		Note over L115: renders [AppSidebar] (26)
+		Note over L115: .
+		create participant AS116 as components<br/>app-sidebar.tsx
+		L115 -->> AS116: 
+		Note over AS116: render Header Content and Footer (26)
+		Note over AS116: render SidebarHistory (61)
+		Note over AS116: .
+		create participant SH118 as components<br/>sidebar-history.tsx
+		AS116 -->> SH118: 
+		Note over SH118: reads enableChatTags @FF (91)
+		Note over SH118: fetch allChatTags which is Chats to Tags mapping (105)
+		Note over SH118: maintain selectedTags[] in state (115)
+		Note over SH118: filter chats based on selectedTags (145)
+		Note over SH118: group chats by date (238)
+		Note over SH118: render GroupedChatsList with groupedChats (268)
+		Note over SH118: render each chat group (357)
+		Note over SH118: render each chat thread in the group (341)
+		Note over SH118: .
+		create participant SHI119 as components<br/>sidebar-history-item.tsx
+		SH118 -->> SHI119: 
+		Note over SHI119: ChatItem checks @FF enableChatTags (52)
+		Note over SHI119: @RENDER : renders ChatLabel with tags if FF is enabled (58)
+		Note over SHI119: all tags are rendered as Badge below chat title (152)
+		Note over SHI119: @Associate : render ChatTagDropdownMenu if FF is enabled (120)
+		Note over SHI119: all tags for chat are passed (122)
+		Note over SHI119: .
+		create participant CTD120 as components/tags<br/>chat-tag-dropdown.tsx
+		SHI119 -->> CTD120: 
+		Note over CTD120: renders additional Tags DropdownMenu in the chat menu (77)
+		Note over CTD120: currentTags  are passed to TAgMultiSelectDialog (91)
+		Note over CTD120: .
+		create participant TMSD121 as components/tags<br/>tag-multi-select-dialog.tsx
+		CTD120 -->> TMSD121: 
+		Note over TMSD121: it is a reusable multiselect for tags which shows currentTags as selected (17)
+		Note over TMSD121: it loads allTags from cache for providing local search and selection (34)
+		Note over TMSD121: all selected tags are rendered in SelectedTags (71)
+		Note over TMSD121: TagsFilterAndSelect helps in searching and selecting tags (73)
+		Note over TMSD121: it renders filtered tags for selection based on search query (127)
+		Note over TMSD121: on action button click callback is called with selected tag objects (54)
+		TMSD121 -->> CTD120: 
+		Note over CTD120: here tag associations with chat are modified in db and selectedTags passed to onTagsUpdate callback (41)
+		CTD120 -->> SHI119: 
+		Note over SHI119: callback calls onTagsUpdate (123)
+		SHI119 -->> SH118: 
+		Note over SH118: onChatTagsUpdate is called with chatId and newTags (348)
+		Note over SH118: mutates the allChatTags in cache (276)
+		Note over SH118: allChatTags force ChatItem to rerender with updated tags (347)
+		SH118 -->> SHI119: 
+		Note over SHI119: ChatLabel is updated with new tags (134)
+		SHI119 -->> SH118: 
+		Note over SH118: selectedTags are passed to TagManager (213)
+		Note over SH118: .
+		create participant TM122 as components/tags<br/>tag-manager.tsx
+		SH118 -->> TM122: 
+		Note over TM122: loads all tags from server (40)
+		Note over TM122: @CREATE : TagInput used for creation of tags (154)
+		Note over TM122: created tag is saved to server (180)
+		Note over TM122: the tags cache is updated as well (195)
+		Note over TM122: @Filtering : TagSelection renders all tags and highlights selectedTags (155)
+		Note over TM122: on clicking a tag setSelectedTags callback is called (261)
+		Note over TM122: which calls callback setSelectedTags (33)
+		TM122 -->> SH118: 
+		Note over SH118: selectedTags are updated forcing filtering of chat threads (214)
+		SH118 -->> TM122: 
+		Note over TM122: @Delete : DeleteTagMenu takes care of deletion of tags (148)
+		Note over TM122: Trash icon is used for deletion (314)
+		Note over TM122: reusing TagMultiSelectDialog for selection of tags for deletion (319)
+		Note over TM122: currentTags are empty as we would select from the dialog itself (320)
+		TM122 -->> TMSD121: 
+		Note over TMSD121: on click of action button callback is passed with selected tags (53)
+		TMSD121 -->> TM122: 
+		Note over TM122: handleDeleteTags is invoked with tags (321)
+		Note over TM122: all the tags are deleted on server (57)
+		Note over TM122: cahce for all tags is updated (77)
+		Note over TM122: selectedTags used for highligting tags is updated (90)
+		Note over TM122: onTagsDeleted callback invoked (94)
+		TM122 -->> SH118: 
+		Note over SH118: refetch all chatTags from server since some tags are deleted (218)
 ```
-
-Your app template should now be running on [localhost:3000](http://localhost:3000).
