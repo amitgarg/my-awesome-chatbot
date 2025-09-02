@@ -72,7 +72,21 @@
   - Quality Assurance
     - [ ] Setup jira dashboard for tracking bugs
   
+#### Development
+- refactoring of code to prepare for changes, show the commit history
+- design interface between server and ui
+- design db schema and api endpoints
+- impliment queries utils to be used by api enpoints
+- impliment api endpoints
+- build components keeping reusability in mind
 
+#### Challenges
+- Next.js
+- tailwind css
+- lacked the support for a design system
+- some components provided by other libraries were not available (eg: multiselect)
+- implimenting APIs (used cursor for that)
+- deploying to vercel and configuration
 
 ### The code flow diagram for the tag management flow
 ```mermaid
